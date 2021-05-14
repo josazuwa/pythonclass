@@ -10,7 +10,7 @@ import os
 import validation
 
 user_db_path = "data/user_record/"
-auth_session_path = "data/auth_session"
+auth_session_path = "data/auth_session/"
 
 
 def create(user_account_number, first_name, last_name, email, password):
@@ -156,4 +156,50 @@ def authenticated_user(account_number, password):
 
     return False
 
+def current_user_login(first_name, last_name):
+    completion_state = False
 
+    try:
+
+        f = open(auth_session_path + str(first_name) + "_" + str(last_name) + ".txt", "x")
+
+    except FileExistsError:
+
+        does_file_contain_data = read(auth_session_path + str(first_name) + "_" + str(last_name) + ".txt")
+        if not does_file_contain_data:
+            current_user_logout(first_name, last_name)
+
+    else:
+
+        f.write(first_name + " " + last_name +  " is currently logged in.")
+        completion_state = True
+
+    finally:
+
+        f.close()
+        return completion_state
+
+
+
+def current_user_logout(first_name, last_name):
+
+    # find user with account number
+    # delete the user record (file)
+    # return true
+
+    is_delete_successful = False
+
+    if os.path.exists(auth_session_path + str(first_name) + "_" + str(last_name) + ".txt"):
+
+        try:
+
+            os.remove(auth_session_path + str(first_name) + "_" + str(last_name) + ".txt")
+            is_delete_successful = True
+
+        except FileNotFoundError:
+
+            print("User not found")
+
+        finally:
+
+            return is_delete_successful

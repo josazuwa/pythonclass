@@ -15,12 +15,17 @@ import validation
 import database
 from getpass import getpass
 
+
 account_number_from_user = None
+
 
 def init():
     print("Welcome to bankPHP")
-
-    have_account = int(input("Do you have account with us: 1 (yes) 2 (no) \n"))
+    try:
+        have_account = int(input("Do you have account with us: 1 (yes) 2 (no) \n"))
+    except ValueError:
+        print("You have selected invalid option")
+        init()
 
     if have_account == 1:
 
@@ -44,12 +49,11 @@ def login():
     is_valid_account_number = validation.account_number_validation(account_number_from_user)
 
     if is_valid_account_number:
-
         password = getpass("What is your password \n")
-
-        user = database.authenticated_user(account_number_from_user, password);
+        user = database.authenticated_user(account_number_from_user, password)
 
         if user:
+            database.current_user_login(user[0], user[1])
             bank_operation(user)
 
         print('Invalid account or password')
@@ -93,36 +97,61 @@ def bank_operation(user):
     selected_option = int(input("What would you like to do? (1) deposit (2) withdrawal (3) Logout (4) Exit \n"))
 
     if selected_option == 1:
-
         deposit_operation(user)
+
     elif selected_option == 2:
+        withdrawal_operation(user)
 
-        withdrawal_operation()
     elif selected_option == 3:
-
+        database.current_user_logout(user[0], user[1])
         logout()
+
     elif selected_option == 4:
-
+        database.current_user_logout(user[0], user[1])
         exit()
-    else:
 
+    else:
         print("Invalid option selected")
         bank_operation(user)
 
 
-def withdrawal_operation():
-    print("withdrawal")
+def withdrawal_operation(user):
     # get current balance
     # get amount to withdraw
     # check if current balance > withdraw balance
     # deduct withdrawn amount form current balance
     # display current balance
 
+    current_balance = int(get_current_balance(user))
+    try:
+        amount_to_withdrawl = int(input("How much do you want to withdrawl? "))
+    except ValueError:
+        print("Please input a valid number.")
+        bank_operation(user)
+
+    if(current_balance < amount_to_withdrawl):
+        print("Insuffient Balance")
+        bank_operation(user)
+
+    else:
+        current_balance -= amount_to_withdrawl
+        set_current_balance(user, str(current_balance))
+        if database.update(account_number_from_user, user):
+            print("Your account balance is {}".format(current_balance))
+            bank_operation(user)
+
+        else:
+            print("Transaction not successful")
+            bank_operation(user)
 
 def deposit_operation(user):
-    
     current_balance = int(get_current_balance(user))
-    amount_to_deposit = int(input("How much do you want to deposit? "))
+    try:
+        amount_to_deposit = int(input("How much do you want to deposit? "))
+    except ValueError:
+        print("Please input a valid number.")
+        bank_operation(user)
+
     current_balance += amount_to_deposit
     set_current_balance(user, str(current_balance))
 
